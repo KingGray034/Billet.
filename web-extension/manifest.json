@@ -48,6 +48,7 @@
   ],
   "host_permissions": [
     "http://localhost:3000/*",
+    "https://ai-job-tracker-a84d.vercel.app/*",
     "*://*.linkedin.com/*",
     "*://*.indeed.com/*",
     "*://*.glassdoor.com/*",

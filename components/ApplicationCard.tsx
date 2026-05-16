@@ -23,48 +23,36 @@ type Application = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getBorderColor(status: string): string {
-  const map: Record<string, string> = {
-    PENDING: "border-retro-teal",
-    APPLIED: "border-retro-orange",
-    SCREENING: "border-retro-yellow",
-    INTERVIEW: "border-retro-purple",
-    OFFER: "border-retro-green",
-    REJECTED: "border-retro-red",
-  };
-  return map[status] ?? "border-retro-border";
-}
+const STATUS_BADGE: Record<string, { bg: string; text: string; label: string }> = {
+  PENDING:   { bg: "bg-retro-teal",   text: "text-white",        label: "To Apply"  },
+  APPLIED:   { bg: "bg-retro-orange", text: "text-white",        label: "Applied"   },
+  SCREENING: { bg: "bg-retro-yellow", text: "text-retro-border", label: "Screening" },
+  INTERVIEW: { bg: "bg-retro-purple", text: "text-white",        label: "Interview" },
+  OFFER:     { bg: "bg-retro-green",  text: "text-white",        label: "Offer"     },
+  REJECTED:  { bg: "bg-retro-red",    text: "text-white",        label: "Rejected"  },
+};
 
-function getStatusLabel(
-  status: string,
-  dateApplied: Date,
-  interviews?: Interview[],
-): string {
+function getDateLabel(status: string, dateApplied: Date, interviews?: Interview[]): string {
   const date = format(new Date(dateApplied), "MMM d, yyyy").toUpperCase();
 
   if (status === "INTERVIEW") {
-    const firstInterview = interviews?.[0];
-    const round = firstInterview?.type
-      ? parseInt(firstInterview.type.replace("Round ", ""), 10) || 1
-      : 1;
-    const interviewDate = firstInterview?.scheduledAt
-      ? format(
-          new Date(firstInterview.scheduledAt),
-          "MMM d, yyyy",
-        ).toUpperCase()
+    const first = interviews?.[0];
+    const round = first?.type ? parseInt(first.type.replace("Round ", ""), 10) || 1 : 1;
+    const interviewDate = first?.scheduledAt
+      ? format(new Date(first.scheduledAt), "MMM d, yyyy").toUpperCase()
       : date;
-    return `ROUND ${round}: ${interviewDate}`;
+    return `Round ${round} · ${interviewDate}`;
   }
 
   const labels: Record<string, string> = {
-    PENDING: `POSTED: ${date}`,
-    APPLIED: `APPLIED: ${date}`,
-    SCREENING: `CALL: ${date}`,
-    OFFER: `OFFER RECEIVED: ${date}`,
-    REJECTED: `CLOSED: ${date}`,
+    PENDING:   `Posted: ${date}`,
+    APPLIED:   `Applied: ${date}`,
+    SCREENING: `Call: ${date}`,
+    OFFER:     `Offer: ${date}`,
+    REJECTED:  `Closed: ${date}`,
   };
 
-  return labels[status] ?? `POSTED: ${date}`;
+  return labels[status] ?? date;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -93,18 +81,22 @@ function ApplicationCard({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const statusLabel = getStatusLabel(
+  const badge = STATUS_BADGE[application.status] ?? {
+    bg: "bg-white",
+    text: "text-retro-border",
+    label: application.status,
+  };
+
+  const dateLabel = getDateLabel(
     application.status,
     application.dateApplied,
     application.interviews,
   );
 
-  const borderColor = getBorderColor(application.status);
-
   const handleClick = () => {
     if (!isDragging) {
       const params = new URLSearchParams(window.location.search);
-      const currentView = params.get("view") || "kanban";
+      const currentView = params.get("view") ?? "kanban";
       router.push(`/application/${application.id}?returnView=${currentView}`);
     }
   };
@@ -115,66 +107,66 @@ function ApplicationCard({
       style={style}
       {...attributes}
       {...listeners}
-      className={`relative bg-white border-4 ${borderColor} p-6 w-full min-h-80 flex flex-col justify-between retro-card-shadow cursor-grab active:cursor-grabbing ${
-        isRejected ? "bg-slate-50 opacity-70" : ""
-      }`}
       onClick={handleClick}
+      className={`bg-white border-4 border-retro-border p-6 w-full min-h-80 flex flex-col justify-between cursor-grab active:cursor-grabbing transition-opacity ${
+        isRejected ? "opacity-60" : ""
+      }`}
     >
+      {/* ── Body ── */}
       <div className="space-y-4">
-        <span className="text-[10px] font-bold tracking-[0.2em] text-primary uppercase">
-          REF #{application.id.slice(-6)}
+        <span className="text-[10px] font-bold tracking-[0.2em] text-primary uppercase font-sans">
+          Billet #{application.id.slice(-6).toUpperCase()}
         </span>
 
         <h4
-          className={`text-xl font-bold leading-tight ${isRejected ? "line-through" : ""}`}
+          className={`font-serif text-xl font-bold leading-tight text-retro-border ${
+            isRejected ? "line-through" : ""
+          }`}
         >
           {application.position}
         </h4>
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium flex items-center gap-2">
-            <span>🏢</span> {application.company.name}
+        <div className="space-y-2 font-sans">
+          <p className="text-sm font-medium text-retro-border flex items-baseline gap-2">
+            <span className="text-[10px] font-bold tracking-widest uppercase text-retro-border/40 shrink-0">Co.</span>
+            {application.company.name}
           </p>
           {application.location && (
-            <p className="text-sm text-slate-600 flex items-center gap-2">
-              <span>📍</span> {application.location}
+            <p className="text-sm text-retro-border/70 flex items-baseline gap-2">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-retro-border/40 shrink-0">Loc.</span>
+              {application.location}
             </p>
           )}
           {application.contactEmail && (
-            <p className="text-sm text-slate-600 flex items-center gap-2 break-all">
-              <span>✉️</span> {application.contactEmail}
+            <p className="text-sm text-retro-border/70 flex items-baseline gap-2 break-all">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-retro-border/40 shrink-0">Mail.</span>
+              {application.contactEmail}
             </p>
           )}
           {application.salary ? (
-            <p className="text-sm text-slate-600 flex items-center gap-2">
-              <span>💰</span> {application.salary}
+            <p className="text-sm text-retro-border/70 flex items-baseline gap-2">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-retro-border/40 shrink-0">Sal.</span>
+              {application.salary}
             </p>
           ) : (
-            <p className="text-sm text-slate-400 italic flex items-center gap-2">
-              <span>💰</span> Salary not specified
+            <p className="text-sm text-retro-border/30 italic flex items-baseline gap-2">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-retro-border/20 shrink-0 not-italic">Sal.</span>
+              Not specified
             </p>
           )}
         </div>
       </div>
 
-      <div
-        className={`pt-4 mt-4 ${
-          application.status === "OFFER"
-            ? "border-t-2 border-primary"
-            : "border-t border-dashed border-retro-border/30"
-        }`}
-      >
-        <p
-          className={`text-[11px] font-bold ${
-            application.status === "OFFER"
-              ? "text-primary"
-              : application.status === "REJECTED"
-                ? "text-red-700"
-                : "text-slate-500"
-          }`}
+      {/* ── Footer ── */}
+      <div className="pt-4 mt-4 border-t-2 border-dashed border-retro-border/20 flex items-center justify-between gap-2">
+        <span
+          className={`px-3 py-1 ${badge.bg} ${badge.text} border-2 border-retro-border font-serif font-bold uppercase text-xs tracking-wide`}
         >
-          {statusLabel}
-        </p>
+          {badge.label}
+        </span>
+        <span className="font-sans text-[10px] text-retro-border/50 uppercase tracking-wider text-right">
+          {dateLabel}
+        </span>
       </div>
     </div>
   );

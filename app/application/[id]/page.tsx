@@ -72,7 +72,7 @@ function ApplicationDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const applicationId = params.id as string;
-  const returnView = searchParams.get("returnView") || "kanban";
+  const returnView = searchParams.get("returnView") ?? "kanban";
 
   const [resumeText, setResumeText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -197,7 +197,7 @@ function ApplicationDetailPage() {
     <div className="min-h-screen bg-background-light">
       <div className="max-w-5xl mx-auto px-6 py-8">
         <button
-          onClick={() => router.push(`/?view=${returnView}`)}
+          onClick={() => router.push(`/dashboard?view=${returnView}`)}
           className="mb-6 px-6 py-2 bg-white border-4 border-retro-border font-bold retro-button-shadow hover:bg-retro-yellow/30 text-retro-border uppercase tracking-wider transition-all text-sm"
         >
           &larr; Back to Dashboard
@@ -247,10 +247,7 @@ function ApplicationDetailPage() {
                 <InfoField label="Status" value={application.status} />
                 <InfoField
                   label="Applied"
-                  value={format(
-                    new Date(application.dateApplied),
-                    "MMM d, yyyy",
-                  )}
+                  value={format(new Date(application.dateApplied), "MMM d, yyyy")}
                 />
                 <InfoField
                   label="Location"
@@ -324,9 +321,7 @@ function ApplicationDetailPage() {
                   <input
                     type="email"
                     value={editForm.contactEmail}
-                    onChange={(e) =>
-                      updateField("contactEmail", e.target.value)
-                    }
+                    onChange={(e) => updateField("contactEmail", e.target.value)}
                     placeholder="recruiter@company.com"
                     className="w-full px-4 py-2 border-4 border-retro-border outline-none focus:border-primary"
                   />
@@ -339,9 +334,7 @@ function ApplicationDetailPage() {
                 </label>
                 <textarea
                   value={editForm.jobDescription}
-                  onChange={(e) =>
-                    updateField("jobDescription", e.target.value)
-                  }
+                  onChange={(e) => updateField("jobDescription", e.target.value)}
                   rows={8}
                   className="w-full px-4 py-2 border-4 border-retro-border outline-none focus:border-primary"
                 />
@@ -366,10 +359,7 @@ function ApplicationDetailPage() {
         <div className="space-y-8">
           {/* Resume Analysis */}
           <div className="bg-white border-4 border-retro-border retro-card-shadow p-8">
-            <SectionHeader
-              label="AI Resume Analysis"
-              color="bg-retro-teal/30"
-            />
+            <SectionHeader label="AI Resume Analysis" color="bg-retro-teal/30" />
 
             {!parsedAnalysis ? (
               <>
@@ -390,9 +380,7 @@ function ApplicationDetailPage() {
                     disabled={analyzeResume.isPending}
                     className="bg-primary text-white px-8 py-3 border-4 border-retro-border font-bold retro-button-shadow hover:bg-primary/90 disabled:bg-gray-400 uppercase tracking-wider text-sm transition-all"
                   >
-                    {analyzeResume.isPending
-                      ? "Analyzing..."
-                      : "Analyze Resume"}
+                    {analyzeResume.isPending ? "Analyzing..." : "Analyze Resume"}
                   </button>
                 </div>
               </>
@@ -408,21 +396,9 @@ function ApplicationDetailPage() {
                   </div>
 
                   {[
-                    {
-                      label: "Strengths",
-                      items: parsedAnalysis.strengths,
-                      color: "border-retro-green",
-                    },
-                    {
-                      label: "Gaps",
-                      items: parsedAnalysis.gaps,
-                      color: "border-retro-orange",
-                    },
-                    {
-                      label: "Tailoring Tips",
-                      items: parsedAnalysis.tips,
-                      color: "border-retro-purple",
-                    },
+                    { label: "Strengths", items: parsedAnalysis.strengths, color: "border-retro-green" },
+                    { label: "Gaps", items: parsedAnalysis.gaps, color: "border-retro-orange" },
+                    { label: "Tailoring Tips", items: parsedAnalysis.tips, color: "border-retro-purple" },
                   ].map(({ label, items, color }) => (
                     <div key={label} className={`border-4 ${color} p-6`}>
                       <h4 className="font-serif text-base font-bold mb-4 text-retro-border uppercase tracking-wider">
@@ -430,9 +406,7 @@ function ApplicationDetailPage() {
                       </h4>
                       <ul className="list-disc list-inside space-y-2">
                         {items?.map((item, i) => (
-                          <li key={i} className="text-retro-border">
-                            {item}
-                          </li>
+                          <li key={i} className="text-retro-border">{item}</li>
                         ))}
                       </ul>
                     </div>
@@ -444,10 +418,7 @@ function ApplicationDetailPage() {
                     </h4>
                     <div className="flex flex-wrap gap-3">
                       {parsedAnalysis.keywords?.map((k, i) => (
-                        <span
-                          key={i}
-                          className="bg-retro-yellow border-2 border-retro-border px-4 py-2 font-bold text-sm"
-                        >
+                        <span key={i} className="bg-retro-yellow border-2 border-retro-border px-4 py-2 font-bold text-sm">
                           {k}
                         </span>
                       ))}
@@ -461,9 +432,7 @@ function ApplicationDetailPage() {
                     disabled={deleteSuggestion.isPending}
                     className="bg-white text-retro-border px-8 py-3 border-4 border-retro-border font-bold retro-button-shadow hover:bg-gray-100 uppercase tracking-wider text-sm transition-all"
                   >
-                    {deleteSuggestion.isPending
-                      ? "Deleting..."
-                      : "Re-analyze Resume"}
+                    {deleteSuggestion.isPending ? "Deleting..." : "Re-analyze Resume"}
                   </button>
                 </div>
               </>
@@ -472,10 +441,7 @@ function ApplicationDetailPage() {
 
           {/* Interview Questions */}
           <div className="bg-white border-4 border-retro-border retro-card-shadow p-8">
-            <SectionHeader
-              label="Interview Preparation"
-              color="bg-retro-purple/30"
-            />
+            <SectionHeader label="Interview Preparation" color="bg-retro-purple/30" />
 
             {!parsedQuestions ? (
               <>
@@ -488,9 +454,7 @@ function ApplicationDetailPage() {
                     disabled={generateQuestions.isPending}
                     className="bg-retro-purple text-white px-8 py-3 border-4 border-retro-border font-bold retro-button-shadow hover:bg-retro-purple/90 disabled:bg-gray-400 uppercase tracking-wider text-sm transition-all"
                   >
-                    {generateQuestions.isPending
-                      ? "Generating..."
-                      : "Generate Interview Questions"}
+                    {generateQuestions.isPending ? "Generating..." : "Generate Interview Questions"}
                   </button>
                 </div>
               </>
@@ -498,23 +462,15 @@ function ApplicationDetailPage() {
               <>
                 <div className="mt-6 space-y-6">
                   {parsedQuestions.questions?.map((q, i) => (
-                    <div
-                      key={i}
-                      className="border-l-8 border-retro-purple bg-retro-purple/10 pl-6 pr-6 py-4"
-                    >
+                    <div key={i} className="border-l-8 border-retro-purple bg-retro-purple/10 pl-6 pr-6 py-4">
                       <div className="flex gap-3 items-start">
                         <span className="font-serif font-bold text-2xl text-retro-purple">
                           Q{i + 1}
                         </span>
                         <div className="flex-1">
-                          <p className="font-bold text-lg text-retro-border mb-2">
-                            {q.question}
-                          </p>
+                          <p className="font-bold text-lg text-retro-border mb-2">{q.question}</p>
                           <p className="text-sm text-retro-border/60 mb-3">
-                            <span className="font-bold uppercase tracking-wider">
-                              Type:
-                            </span>{" "}
-                            {q.type}
+                            <span className="font-bold uppercase tracking-wider">Type:</span> {q.type}
                           </p>
                           <p className="text-sm text-retro-border bg-white border-2 border-retro-border p-3">
                             <span className="font-bold">Tip:</span> {q.tip}
@@ -531,9 +487,7 @@ function ApplicationDetailPage() {
                     disabled={deleteSuggestion.isPending}
                     className="bg-white text-retro-border px-8 py-3 border-4 border-retro-border font-bold retro-button-shadow hover:bg-gray-100 uppercase tracking-wider text-sm transition-all"
                   >
-                    {deleteSuggestion.isPending
-                      ? "Deleting..."
-                      : "Generate New Questions"}
+                    {deleteSuggestion.isPending ? "Deleting..." : "Generate New Questions"}
                   </button>
                 </div>
               </>
@@ -543,10 +497,7 @@ function ApplicationDetailPage() {
           {/* Calendar Sync */}
           {application.status === "INTERVIEW" && (
             <div className="bg-white border-4 border-retro-border retro-card-shadow p-8">
-              <SectionHeader
-                label="Add Interview to Calendar"
-                color="bg-retro-green/30"
-              />
+              <SectionHeader label="Add Interview to Calendar" color="bg-retro-green/30" />
               <InterviewCalendarForm application={application} />
             </div>
           )}

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Public_Sans, Lora } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -16,9 +16,12 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Job Tracker - AI-Powered Application Manager",
+  title: "Billet — AI-Powered Job Application Tracker",
   description: "Track your job applications with AI assistance",
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
   themeColor: "#ec5b13",
 };
 

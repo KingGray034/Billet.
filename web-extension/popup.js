@@ -1,5 +1,5 @@
 const chrome = typeof browser !== "undefined" ? browser : chrome;
-const API_URL = "http://localhost:3000/api/trpc";
+const API_URL = "https://ai-job-tracker-a84d.vercel.app/api/trpc";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ function getFormData() {
     location: document.getElementById("location").value || undefined,
     salary: document.getElementById("salary").value || undefined,
     contactEmail: document.getElementById("contactEmail").value || undefined,
-    status: document.getElementById("status").value, // ✅ FIXED - was "statusMsg"
+    status: document.getElementById("status").value,
     jobUrl: document.getElementById("url").value || undefined,
     jobDescription: document.getElementById("description").value || undefined,
   };

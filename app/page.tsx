@@ -71,7 +71,7 @@ function Home() {
       {/* Nav */}
       <nav className="border-b-4 border-retro-border bg-background-light sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="font-serif font-bold text-xl tracking-tight text-retro-border">
+          <span className="font-serif font-bold text-4xl tracking-tight text-retro-border">
             BILLET<span className="text-primary">.</span>
           </span>
           <Link
@@ -233,6 +233,66 @@ function Home() {
         </div>
       </section>
 
+      {/* Extension install section */}
+      <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="flex items-end gap-6 mb-12 border-b-4 border-retro-border pb-6">
+          <h2 className="font-serif text-4xl font-bold text-retro-border">
+            Save any job in one click.
+          </h2>
+          <p className="font-sans text-retro-border/50 pb-1 text-sm">Works on every major job board.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
+          {/* Firefox */}
+          <div className="border-4 border-retro-border bg-white p-8 -mt-[4px]">
+            <div className="w-12 h-12 bg-retro-orange border-4 border-retro-border flex items-center justify-center text-xl mb-4 font-serif font-bold text-white text-xs">
+              FF
+            </div>
+            <h3 className="font-serif font-bold text-lg text-retro-border mb-2 uppercase tracking-wide">
+              Firefox Extension
+            </h3>
+            <p className="font-sans text-sm text-retro-border/60 leading-relaxed mb-6">
+              Install once, use forever. Click the extension on any job page — LinkedIn, Indeed, Glassdoor and more — and it autofills everything into Billet instantly.
+            </p>
+            <a
+              href="https://addons.mozilla.org/firefox/addon/billet"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-6 py-3 bg-retro-orange text-white border-4 border-retro-border font-serif font-bold uppercase tracking-wider text-sm retro-button-shadow hover:bg-retro-orange/90 transition-all"
+            >
+              Install for Firefox →
+            </a>
+          </div>
+
+          {/* Edge */}
+          <div className="border-4 border-retro-border bg-white p-8 -mt-[4px] -ml-[4px]">
+            <div className="w-12 h-12 bg-retro-teal border-4 border-retro-border flex items-center justify-center text-xl mb-4 font-serif font-bold text-white text-xs">
+              ED
+            </div>
+            <h3 className="font-serif font-bold text-lg text-retro-border mb-2 uppercase tracking-wide">
+              Edge Extension
+            </h3>
+            <p className="font-sans text-sm text-retro-border/60 leading-relaxed mb-6">
+              Same experience, built for Microsoft Edge. Autofill job details from any supported job board directly into your Billet pipeline.
+            </p>
+            <a
+              href="https://microsoftedge.microsoft.com/addons/detail/billet"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block px-6 py-3 bg-retro-teal text-white border-4 border-retro-border font-serif font-bold uppercase tracking-wider text-sm retro-button-shadow hover:bg-retro-teal/90 transition-all"
+            >
+              Install for Edge →
+            </a>
+          </div>
+        </div>
+
+        <div className="border-4 border-retro-border border-t-0 bg-retro-yellow/30 p-6">
+          <p className="font-sans text-xs text-retro-border/50 uppercase tracking-widest text-center">
+            Supported job boards: LinkedIn · Indeed · Glassdoor · ZipRecruiter · Wellfound · RemoteOK · Monster
+          </p>
+        </div>
+      </section>
+
       {/* CTA banner */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="border-4 border-retro-border bg-retro-yellow p-12 relative retro-card-shadow">
@@ -266,12 +326,26 @@ function Home() {
           <p className="font-sans text-xs text-retro-border/40 uppercase tracking-widest">
             Built with Next.js · Prisma · tRPC · Groq · Llama 3.3
           </p>
-          <Link
-            href="/dashboard"
-            className="font-serif font-bold text-sm text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide"
-          >
-            Dashboard →
-          </Link>
+          <div className="flex items-center gap-6">
+            <Link
+              href="/privacy"
+              className="font-sans text-xs text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/terms"
+              className="font-sans text-xs text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/dashboard"
+              className="font-serif font-bold text-sm text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide"
+            >
+              Dashboard →
+            </Link>
+          </div>
         </div>
       </footer>
 

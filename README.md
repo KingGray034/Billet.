@@ -4,6 +4,8 @@
 
 Billet helps you run your job search like an operation — track every application through a visual Kanban pipeline, prep for interviews with AI-generated questions, analyse your resume against job descriptions, and pull emails straight from Gmail. No spreadsheets. No chaos.
 
+**Live app:** https://billet-ng.vercel.app
+
 ---
 
 ## Features
@@ -16,6 +18,15 @@ Billet helps you run your job search like an operation — track every applicati
 - **Browser Extension** — Auto-capture job details from major job boards (Firefox & Edge)
 - **Analytics View** — Track response rates, pipeline velocity, and application trends
 - **List View** — Sortable and filterable table view of all applications
+
+---
+
+## Browser Extension
+
+The Billet extension works on LinkedIn, Indeed, Glassdoor, ZipRecruiter, Wellfound, RemoteOK, and Monster. Click it on any job page to autofill and save directly to your pipeline.
+
+- [Install for Firefox](https://addons.mozilla.org/firefox/addon/billet)
+- [Install for Edge](https://microsoftedge.microsoft.com/addons/detail/billet)
 
 ---
 
@@ -62,20 +73,11 @@ npm install
 
 ### 3. Set up environment variables
 
-Create a `.env` file in the root:
+Create a `.env` file in the root and add your credentials. Check the services below for where to find each value:
 
-```env
-# Database
-DATABASE_URL="your-supabase-session-pooler-url"
-DIRECT_URL="your-supabase-direct-url"
-
-# Google OAuth
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-# Groq AI
-GROQ_API_KEY="your-groq-api-key"
-```
+- **Supabase** — database URL and direct URL from your project settings
+- **Google Cloud** — client ID and secret from your OAuth credentials
+- **Groq** — API key from console.groq.com
 
 ### 4. Run database migrations
 
@@ -103,6 +105,10 @@ app/
   application/
     [id]/
       page.tsx              # Individual application detail + AI features
+  privacy/
+    page.tsx                # Privacy policy
+  terms/
+    page.tsx                # Terms of service
   api/
     trpc/[trpc]/            # tRPC API handler
     auth/                   # Google OAuth endpoints
@@ -119,6 +125,12 @@ components/
 prisma/
   schema.prisma             # Database schema
   config.ts                 # Prisma config
+extension/
+  manifest.json             # Extension manifest (MV3)
+  popup.html                # Extension popup UI
+  popup.js                  # Extension popup logic
+  content.js                # Job board data extractor
+  privacy-policy.html       # Standalone privacy policy for extension stores
 ```
 
 ---
@@ -131,19 +143,14 @@ The app is deployed on Vercel. The build command is:
 prisma generate && next build
 ```
 
-Make sure all environment variables from `.env` are added to your Vercel project settings before deploying.
+Make sure all environment variables are added to your Vercel project settings before deploying.
 
 ---
 
-## Browser Extension
+## Legal
 
-The companion extension supports Firefox and Edge. It auto-fills application details from major job boards into Billet with one click.
-
-Source lives in `/extension`. To load it locally:
-
-1. Go to `about:debugging` (Firefox) or `edge://extensions` (Edge)
-2. Enable Developer Mode
-3. Load Unpacked → select the `/extension` folder
+- [Privacy Policy](https://billet-ng.vercel.app/privacy)
+- [Terms of Service](https://billet-ng.vercel.app/terms)
 
 ---
 

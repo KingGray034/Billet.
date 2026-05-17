@@ -1,5 +1,6 @@
 const chrome = typeof browser !== "undefined" ? browser : chrome;
-const API_URL = "https://ai-job-tracker-a84d.vercel.app/api/trpc";
+
+const API_URL = "https://billet-ng.vercel.app/api/trpc";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -31,7 +32,7 @@ function getFormData() {
   };
 }
 
-// ─── Autofill Button ─────────────────────────────────────────────────────────
+// ─── Autofill Button ──────────────────────────────────────────────────────────
 
 document.getElementById("autofillBtn").addEventListener("click", () => {
   const btn = document.getElementById("autofillBtn");
@@ -50,17 +51,14 @@ document.getElementById("autofillBtn").addEventListener("click", () => {
           fillForm(response.jobData);
           showStatus("Autofilled from page!", "success");
         } else {
-          showStatus(
-            "Could not extract from this page. Fill manually.",
-            "error",
-          );
+          showStatus("Could not extract from this page. Fill manually.", "error");
         }
       },
     );
   });
 });
 
-// ─── Save Button ─────────────────────────────────────────────────────────────
+// ─── Save Button ──────────────────────────────────────────────────────────────
 
 document.getElementById("saveBtn").addEventListener("click", async () => {
   const btn = document.getElementById("saveBtn");
@@ -77,7 +75,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     const responseData = await response.json();
 
     if (response.ok) {
-      showStatus("Job added to tracker!", "success");
+      showStatus("Saved to Billet!", "success");
       setTimeout(() => window.close(), 2000);
     } else {
       console.error("API error:", responseData);
@@ -85,8 +83,8 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
     }
   } catch (error) {
     console.error("Save failed:", error);
-    showStatus("Error saving. Make sure your tracker app is running!", "error");
+    showStatus("Error saving. Make sure you're logged in to Billet!", "error");
     btn.disabled = false;
-    btn.textContent = "Save to Tracker";
+    btn.textContent = "Save to Billet";
   }
 });

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Job Tracker - Quick Add",
+  "name": "Billet. — Quick Add",
   "version": "1.1.0",
-  "description": "Quickly add jobs from LinkedIn, Indeed, Glassdoor, ZipRecruiter, RemoteOK, Wellfound, Monster",
+  "description": "Quickly save jobs from LinkedIn, Indeed, Glassdoor, ZipRecruiter, RemoteOK, Wellfound and Monster directly to your Billet tracker.",
   "permissions": ["activeTab", "storage", "scripting"],
   "action": {
     "default_popup": "popup.html",
@@ -48,7 +48,7 @@
   ],
   "host_permissions": [
     "http://localhost:3000/*",
-    "https://ai-job-tracker-a84d.vercel.app/*",
+    "https://billet-ng.vercel.app/*",
     "*://*.linkedin.com/*",
     "*://*.indeed.com/*",
     "*://*.glassdoor.com/*",
@@ -64,7 +64,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "job-tracker@gmail.com"
+      "id": "billet@kinggray034"
     }
   }
 }

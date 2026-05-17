@@ -32,7 +32,7 @@ function HomeContent() {
         <header className="flex flex-col items-center gap-8 mb-12">
           <div className="w-full flex justify-between items-center border-b-4 border-retro-border pb-6">
             <h1 className="font-serif text-4xl font-bold tracking-tight">
-              Billet.
+              BILLET<span className="text-primary">.</span>
             </h1>
 
             <div className="flex items-center gap-6">

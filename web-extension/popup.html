@@ -25,12 +25,27 @@
         color: white;
         padding: 16px 20px;
         border-bottom: 6px solid #332211;
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
       }
       .header h2 {
         font-size: 20px;
         font-weight: bold;
         text-transform: uppercase;
         letter-spacing: 2px;
+      }
+      .header .dot {
+        color: #ec5b13;
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .header .sub {
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #ffffff80;
+        margin-left: 4px;
       }
 
       .content {
@@ -152,7 +167,8 @@
   </head>
   <body>
     <div class="header">
-      <h2>Job Tracker</h2>
+      <h2>BILLET<span class="dot">.</span></h2>
+      <span class="sub">Quick Add</span>
     </div>
 
     <div class="content">
@@ -204,7 +220,7 @@
       </div>
 
       <div class="button-group">
-        <button id="saveBtn" class="btn-primary">Save to Tracker</button>
+        <button id="saveBtn" class="btn-primary">Save to Billet</button>
         <button id="autofillBtn" class="btn-secondary">Autofill</button>
       </div>
 

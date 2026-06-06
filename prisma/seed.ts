@@ -9,27 +9,27 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('🌱 Seeding database...');
+  console.log('🌱 Seeding database with demo data...');
 
   const companies = await Promise.all([
     prisma.company.create({
-      data: { name: 'Google', website: 'https://careers.google.com', industry: 'Technology' },
+      data: { name: 'Google', website: 'https://careers.google.com', industry: 'Technology', isDemo: true },
     }),
     prisma.company.create({
-      data: { name: 'Meta', website: 'https://www.metacareers.com', industry: 'Technology' },
+      data: { name: 'Meta', website: 'https://www.metacareers.com', industry: 'Technology', isDemo: true },
     }),
     prisma.company.create({
-      data: { name: 'Amazon', website: 'https://www.amazon.jobs', industry: 'E-commerce' },
+      data: { name: 'Amazon', website: 'https://www.amazon.jobs', industry: 'E-commerce', isDemo: true },
     }),
     prisma.company.create({
-      data: { name: 'Microsoft', website: 'https://careers.microsoft.com', industry: 'Technology' },
+      data: { name: 'Microsoft', website: 'https://careers.microsoft.com', industry: 'Technology', isDemo: true },
     }),
     prisma.company.create({
-      data: { name: 'Netflix', website: 'https://jobs.netflix.com', industry: 'Entertainment' },
+      data: { name: 'Netflix', website: 'https://jobs.netflix.com', industry: 'Entertainment', isDemo: true },
     }),
   ]);
 
-  console.log('✅ Created 5 companies');
+  console.log('✅ Created 5 demo companies');
 
   await Promise.all([
     prisma.application.create({
@@ -42,6 +42,7 @@ async function main() {
         salary: '$180k - $250k',
         jobDescription: 'Build next-generation web applications using React, TypeScript, and modern tools.',
         notes: 'Great company culture',
+        isDemo: true,
       },
     }),
     prisma.application.create({
@@ -55,6 +56,7 @@ async function main() {
         contactEmail: 'recruiting@amazon.com',
         jobDescription: 'Build scalable microservices for AWS.',
         notes: 'Applied through referral',
+        isDemo: true,
       },
     }),
     prisma.application.create({
@@ -68,6 +70,7 @@ async function main() {
         contactEmail: 'talent@netflix.com',
         jobDescription: 'Work on Netflix streaming platform.',
         notes: 'Phone screening next week',
+        isDemo: true,
       },
     }),
     prisma.application.create({
@@ -81,6 +84,7 @@ async function main() {
         contactEmail: 'pm-hiring@google.com',
         jobDescription: 'Lead product strategy for Google Cloud.',
         notes: 'Final round next week',
+        isDemo: true,
       },
     }),
     prisma.application.create({
@@ -94,6 +98,7 @@ async function main() {
         contactEmail: 'offers@amazon.com',
         jobDescription: 'ML models for content recommendation.',
         notes: 'Negotiating compensation',
+        isDemo: true,
       },
     }),
     prisma.application.create({
@@ -106,6 +111,7 @@ async function main() {
         salary: '$130k - $170k',
         jobDescription: 'Design user experiences for Microsoft 365.',
         notes: 'Start date: May 1st',
+        isDemo: true,
       },
     }),
     prisma.application.create({
@@ -118,11 +124,12 @@ async function main() {
         salary: '$145k - $200k',
         jobDescription: 'Secure streaming infrastructure.',
         notes: 'Need more cloud security experience',
+        isDemo: true,
       },
     }),
   ]);
 
-  console.log('✅ Created 7 applications');
+  console.log('✅ Created 7 demo applications');
   console.log('🎉 Seeding completed!');
 }
 

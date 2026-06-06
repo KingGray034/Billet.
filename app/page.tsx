@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { Navbar } from "@/components/LandingPageNavbar"
 
 const features = [
   {
@@ -68,23 +69,25 @@ function Home() {
   return (
     <main className="min-h-screen bg-background-light font-serif overflow-x-hidden">
 
-      {/* Nav */}
-      <nav className="border-b-4 border-retro-border bg-background-light sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="font-serif font-bold text-4xl tracking-tight text-retro-border">
-            BILLET<span className="text-primary">.</span>
-          </span>
+      <Navbar />
+
+      {/* Demo data notice */}
+      <div className="border-b-4 border-retro-border bg-retro-border">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="font-sans text-sm text-background-light/80 text-center sm:text-left">
+            <span className="font-bold text-background-light">The dashboard is preloaded with sample data</span> — explore freely, then clear it when you're ready to start for real.
+          </p>
           <Link
             href="/dashboard"
-            className="px-5 py-2 bg-primary text-white border-4 border-retro-border font-serif font-bold uppercase tracking-wider text-sm retro-button-shadow hover:bg-primary/90 transition-all"
+            className="px-4 py-1.5 bg-primary text-white border-2 border-background-light/20 font-sans font-bold uppercase tracking-wider text-xs whitespace-nowrap hover:bg-primary/90 transition-all"
           >
-            Open Dashboard →
+            Try the Demo →
           </Link>
         </div>
-      </nav>
+      </div>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-20 pb-16">
+      <section className="max-w-6xl mx-auto px-6 pt-16 pb-16">
         <div className="flex flex-col lg:flex-row items-start gap-16">
 
           <div className="flex-1">
@@ -243,9 +246,8 @@ function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
-          {/* Firefox */}
           <div className="border-4 border-retro-border bg-white p-8 -mt-[4px]">
-            <div className="w-12 h-12 bg-retro-orange border-4 border-retro-border flex items-center justify-center text-xl mb-4 font-serif font-bold text-white text-xs">
+            <div className="w-12 h-12 bg-retro-orange border-4 border-retro-border flex items-center justify-center mb-4 font-serif font-bold text-white text-xs">
               FF
             </div>
             <h3 className="font-serif font-bold text-lg text-retro-border mb-2 uppercase tracking-wide">
@@ -255,7 +257,7 @@ function Home() {
               Install once, use forever. Click the extension on any job page — LinkedIn, Indeed, Glassdoor and more — and it autofills everything into Billet instantly.
             </p>
             <a
-              href="https://addons.mozilla.org/firefox/addon/billet"
+              href="https://addons.mozilla.org/en-US/firefox/addon/billet-quick-add/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block px-6 py-3 bg-retro-orange text-white border-4 border-retro-border font-serif font-bold uppercase tracking-wider text-sm retro-button-shadow hover:bg-retro-orange/90 transition-all"
@@ -264,9 +266,8 @@ function Home() {
             </a>
           </div>
 
-          {/* Edge */}
           <div className="border-4 border-retro-border bg-white p-8 -mt-[4px] -ml-[4px]">
-            <div className="w-12 h-12 bg-retro-teal border-4 border-retro-border flex items-center justify-center text-xl mb-4 font-serif font-bold text-white text-xs">
+            <div className="w-12 h-12 bg-retro-teal border-4 border-retro-border flex items-center justify-center mb-4 font-serif font-bold text-white text-xs">
               ED
             </div>
             <h3 className="font-serif font-bold text-lg text-retro-border mb-2 uppercase tracking-wide">
@@ -327,22 +328,13 @@ function Home() {
             Built with Next.js · Prisma · tRPC · Groq · Llama 3.3
           </p>
           <div className="flex items-center gap-6">
-            <Link
-              href="/privacy"
-              className="font-sans text-xs text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide"
-            >
+            <Link href="/privacy" className="font-sans text-xs text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide">
               Privacy
             </Link>
-            <Link
-              href="/terms"
-              className="font-sans text-xs text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide"
-            >
+            <Link href="/terms" className="font-sans text-xs text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide">
               Terms
             </Link>
-            <Link
-              href="/dashboard"
-              className="font-serif font-bold text-sm text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide"
-            >
+            <Link href="/dashboard" className="font-serif font-bold text-sm text-retro-border/50 hover:text-primary transition-colors uppercase tracking-wide">
               Dashboard →
             </Link>
           </div>

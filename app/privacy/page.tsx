@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Navbar } from "@/components/LandingPageNavbar"
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Billet",
@@ -56,24 +56,10 @@ function PrivacyPage() {
   return (
     <main className="min-h-screen bg-background-light">
 
-      {/* Nav */}
-      <nav className="border-b-4 border-retro-border bg-background-light sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="font-serif font-bold text-4xl tracking-tight text-retro-border">
-            BILLET<span className="text-primary">.</span>
-          </Link>
-          <Link
-            href="/dashboard"
-            className="px-5 py-2 bg-primary text-white border-4 border-retro-border font-serif font-bold uppercase tracking-wider text-sm retro-button-shadow hover:bg-primary/90 transition-all"
-          >
-            Open Dashboard →
-          </Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <div className="max-w-4xl mx-auto px-6 py-16">
 
-        {/* Header */}
         <div className="border-b-4 border-retro-border pb-8 mb-12">
           <p className="font-sans text-xs font-bold uppercase tracking-widest text-retro-border/40 mb-4">
             Legal
@@ -86,7 +72,6 @@ function PrivacyPage() {
           </p>
         </div>
 
-        {/* Intro */}
         <div className="bg-retro-yellow border-4 border-retro-border p-6 mb-12 retro-card-shadow">
           <p className="font-sans text-retro-border leading-relaxed">
             Billet is a personal job application tracker. This policy explains what data is collected
@@ -95,7 +80,6 @@ function PrivacyPage() {
           </p>
         </div>
 
-        {/* Sections */}
         <div className="space-y-0">
           {sections.map(({ title, body }, i) => (
             <div key={title} className="border-4 border-retro-border bg-white p-8 -mt-[4px]">
@@ -116,7 +100,6 @@ function PrivacyPage() {
           ))}
         </div>
 
-        {/* Footer note */}
         <div className="mt-12 pt-8 border-t-4 border-retro-border">
           <p className="font-sans text-xs text-retro-border/40 uppercase tracking-widest text-center">
             Billet · Built with Next.js · Prisma · tRPC · Groq · Llama 3.3

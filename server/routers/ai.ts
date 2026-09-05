@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { router, publicProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
+import { router, protectedProcedure } from "../trpc";
 import prisma from "../db";
 import {
   analyzeResumeMatch,
@@ -14,14 +15,22 @@ const applicationIdInput = z.object({ applicationId: z.string() });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function getApplicationOrThrow(id: string) {
+async function getApplicationOrThrow(id: string, userId: string) {
   const application = await prisma.application.findUnique({
     where: { id },
     include: { company: true },
   });
 
-  if (!application || !application.jobDescription) {
-    throw new Error("Application or job description not found");
+  if (!application) {
+    throw new TRPCError({ code: "NOT_FOUND" });
+  }
+
+  if (application.userId !== userId) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+
+  if (!application.jobDescription) {
+    throw new Error("Job description not found");
   }
 
   return application;
@@ -44,14 +53,14 @@ async function saveSuggestion(
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 const aiRouter = router({
-  analyzeResume: publicProcedure
+  analyzeResume: protectedProcedure
     .input(
       applicationIdInput.extend({
         resumeText: z.string().min(50, "Resume text is too short"),
       }),
     )
-    .mutation(async ({ input }) => {
-      const application = await getApplicationOrThrow(input.applicationId);
+    .mutation(async ({ input, ctx }) => {
+      const application = await getApplicationOrThrow(input.applicationId, ctx.user.userId);
       const analysis = await analyzeResumeMatch(
         input.resumeText,
         application.jobDescription!,
@@ -60,30 +69,26 @@ const aiRouter = router({
       return analysis;
     }),
 
-  generateQuestions: publicProcedure
+  generateQuestions: protectedProcedure
     .input(applicationIdInput)
-    .mutation(async ({ input }) => {
-      const application = await getApplicationOrThrow(input.applicationId);
+    .mutation(async ({ input, ctx }) => {
+      const application = await getApplicationOrThrow(input.applicationId, ctx.user.userId);
       const questions = await generateInterviewQuestions(
         application.jobDescription!,
         application.position,
       );
-      await saveSuggestion(
-        input.applicationId,
-        "interview_questions",
-        questions,
-      );
+      await saveSuggestion(input.applicationId, "interview_questions", questions);
       return questions;
     }),
 
-  generateCoverLetterTips: publicProcedure
+  generateCoverLetterTips: protectedProcedure
     .input(
       applicationIdInput.extend({
         userBackground: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const application = await getApplicationOrThrow(input.applicationId);
+    .mutation(async ({ input, ctx }) => {
+      const application = await getApplicationOrThrow(input.applicationId, ctx.user.userId);
       const tips = await generateCoverLetterTips(
         application.jobDescription!,
         application.position,
@@ -94,19 +99,35 @@ const aiRouter = router({
       return tips;
     }),
 
-  analyzeJobPosting: publicProcedure
+  analyzeJobPosting: protectedProcedure
     .input(z.object({ jobDescription: z.string() }))
     .mutation(({ input }) => analyzeJobPosting(input.jobDescription)),
 
-  deleteSuggestion: publicProcedure
+  deleteSuggestion: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(({ input }) =>
-      prisma.aiSuggestion.delete({ where: { id: input.id } }),
-    ),
+    .mutation(async ({ input, ctx }) => {
+      // Verify the suggestion belongs to the user via its application
+      const suggestion = await prisma.aiSuggestion.findUnique({
+        where: { id: input.id },
+        include: { application: { select: { userId: true } } },
+      });
+      if (!suggestion || suggestion.application.userId !== ctx.user.userId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      return prisma.aiSuggestion.delete({ where: { id: input.id } });
+    }),
 
-  getSuggestions: publicProcedure
+  getSuggestions: protectedProcedure
     .input(applicationIdInput)
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
+      // Verify ownership before returning suggestions
+      const app = await prisma.application.findUnique({
+        where: { id: input.applicationId },
+        select: { userId: true },
+      });
+      if (!app || app.userId !== ctx.user.userId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
       const suggestions = await prisma.aiSuggestion.findMany({
         where: { applicationId: input.applicationId },
         orderBy: { createdAt: "desc" },

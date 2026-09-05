@@ -68,6 +68,7 @@ document.getElementById("saveBtn").addEventListener("click", async () => {
   try {
     const response = await fetch(`${API_URL}/application.create?batch=1`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ 0: { json: getFormData() } }),
     });

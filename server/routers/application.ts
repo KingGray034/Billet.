@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { router, publicProcedure } from "../trpc";
+import { TRPCError } from "@trpc/server";
+import { router, protectedProcedure } from "../trpc";
 import prisma from "../db";
 import { Status } from "@prisma/client";
 
@@ -11,11 +12,24 @@ const optionalUrl = z.union([z.literal(""), z.string().url()]);
 const optionalEmail = z.union([z.literal(""), z.string().email()]);
 const applicationId = z.object({ id: z.string() });
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+async function verifyOwnership(applicationId: string, userId: string) {
+  const app = await prisma.application.findUnique({
+    where: { id: applicationId },
+    select: { userId: true },
+  });
+  if (!app || app.userId !== userId) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 const applicationRouter = router({
-  getAll: publicProcedure.query(() =>
+  getAll: protectedProcedure.query(({ ctx }) =>
     prisma.application.findMany({
+      where: { userId: ctx.user.userId },
       include: {
         company: true,
         interviews: true,
@@ -25,8 +39,8 @@ const applicationRouter = router({
     }),
   ),
 
-  getById: publicProcedure.input(applicationId).query(({ input }) =>
-    prisma.application.findUnique({
+  getById: protectedProcedure.input(applicationId).query(async ({ input, ctx }) => {
+    const app = await prisma.application.findUnique({
       where: { id: input.id },
       include: {
         company: true,
@@ -34,10 +48,14 @@ const applicationRouter = router({
         documents: true,
         aiSuggestions: true,
       },
-    }),
-  ),
+    });
+    if (!app || app.userId !== ctx.user.userId) {
+      throw new TRPCError({ code: "NOT_FOUND" });
+    }
+    return app;
+  }),
 
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         position: z.string().min(1, "Position is required").max(200),
@@ -52,13 +70,14 @@ const applicationRouter = router({
         notes: z.string().max(10000).optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const company = await prisma.company.upsert({
         where: { name: input.companyName },
         update: { website: input.companyWebsite || undefined },
         create: {
           name: input.companyName,
           website: input.companyWebsite || undefined,
+          userId: ctx.user.userId,
         },
       });
 
@@ -66,6 +85,7 @@ const applicationRouter = router({
         data: {
           position: input.position,
           companyId: company.id,
+          userId: ctx.user.userId,
           status: input.status ?? Status.PENDING,
           jobDescription: input.jobDescription,
           salary: input.salary,
@@ -78,16 +98,17 @@ const applicationRouter = router({
       });
     }),
 
-  updateStatus: publicProcedure
+  updateStatus: protectedProcedure
     .input(z.object({ id: z.string(), status: z.enum(StatusValues) }))
-    .mutation(({ input }) =>
-      prisma.application.update({
+    .mutation(async ({ input, ctx }) => {
+      await verifyOwnership(input.id, ctx.user.userId);
+      return prisma.application.update({
         where: { id: input.id },
         data: { status: input.status },
-      }),
-    ),
+      });
+    }),
 
-  update: publicProcedure
+  update: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -101,19 +122,22 @@ const applicationRouter = router({
         notes: z.string().max(10000).optional(),
       }),
     )
-    .mutation(({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      await verifyOwnership(input.id, ctx.user.userId);
       const { id, ...data } = input;
       return prisma.application.update({ where: { id }, data });
     }),
 
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(applicationId)
-    .mutation(({ input }) =>
-      prisma.application.delete({ where: { id: input.id } }),
-    ),
+    .mutation(async ({ input, ctx }) => {
+      await verifyOwnership(input.id, ctx.user.userId);
+      return prisma.application.delete({ where: { id: input.id } });
+    }),
 
-  getByStatus: publicProcedure.query(async () => {
+  getByStatus: protectedProcedure.query(async ({ ctx }) => {
     const applications = await prisma.application.findMany({
+      where: { userId: ctx.user.userId },
       include: {
         company: true,
         interviews: {

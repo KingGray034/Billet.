@@ -7,6 +7,11 @@ import { createInterviewEvent } from "../services/calender";
 
 // ─── Router ───────────────────────────────────────────────────────────────────
 
+// Note: Gmail and Calendar procedures stay as publicProcedure because they use
+// their own separate OAuth token (google_access_token cookie) — not the session.
+// The session middleware on /dashboard already ensures only logged-in users can
+// reach the UI that triggers these, so they are implicitly protected.
+
 const integrationsRouter = router({
   getGmailAuthUrl: publicProcedure.query(() => ({
     url: getGmailAuthUrl(),
@@ -15,11 +20,12 @@ const integrationsRouter = router({
   searchGmail: publicProcedure.mutation(async () => {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("google_access_token")?.value;
-    if (!accessToken)
+    if (!accessToken) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
         message: "Not authenticated with Google",
       });
+    }
     return await searchApplicationEmails(accessToken);
   }),
 
@@ -36,14 +42,13 @@ const integrationsRouter = router({
     .mutation(async ({ input }) => {
       const cookieStore = await cookies();
       const accessToken = cookieStore.get("google_access_token")?.value;
-      if (!accessToken)
+      if (!accessToken) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Not authenticated with Google",
         });
-      const endTime = new Date(
-        input.startTime.getTime() + input.duration * 60000,
-      );
+      }
+      const endTime = new Date(input.startTime.getTime() + input.duration * 60000);
       return await createInterviewEvent(accessToken, {
         title: input.title,
         description: input.description,

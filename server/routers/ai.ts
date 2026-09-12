@@ -2,6 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
 import prisma from "../db";
+import { aiRatelimit } from "../ratelimit";
 import {
   analyzeResumeMatch,
   generateInterviewQuestions,
@@ -50,6 +51,18 @@ async function saveSuggestion(
   });
 }
 
+// ─── Rate limit helper ────────────────────────────────────────────────────────
+
+async function checkAiRateLimit(userId: string) {
+  const { success, remaining } = await aiRatelimit.limit(userId);
+  if (!success) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: `AI quota reached. You have ${remaining} requests remaining this hour.`,
+    });
+  }
+}
+
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 const aiRouter = router({
@@ -60,7 +73,11 @@ const aiRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const application = await getApplicationOrThrow(input.applicationId, ctx.user.userId);
+      await checkAiRateLimit(ctx.user.userId);
+      const application = await getApplicationOrThrow(
+        input.applicationId,
+        ctx.user.userId,
+      );
       const analysis = await analyzeResumeMatch(
         input.resumeText,
         application.jobDescription!,
@@ -72,12 +89,20 @@ const aiRouter = router({
   generateQuestions: protectedProcedure
     .input(applicationIdInput)
     .mutation(async ({ input, ctx }) => {
-      const application = await getApplicationOrThrow(input.applicationId, ctx.user.userId);
+      await checkAiRateLimit(ctx.user.userId);
+      const application = await getApplicationOrThrow(
+        input.applicationId,
+        ctx.user.userId,
+      );
       const questions = await generateInterviewQuestions(
         application.jobDescription!,
         application.position,
       );
-      await saveSuggestion(input.applicationId, "interview_questions", questions);
+      await saveSuggestion(
+        input.applicationId,
+        "interview_questions",
+        questions,
+      );
       return questions;
     }),
 
@@ -88,25 +113,35 @@ const aiRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const application = await getApplicationOrThrow(input.applicationId, ctx.user.userId);
+      await checkAiRateLimit(ctx.user.userId);
+      const application = await getApplicationOrThrow(
+        input.applicationId,
+        ctx.user.userId,
+      );
       const tips = await generateCoverLetterTips(
         application.jobDescription!,
         application.position,
         application.company.name,
         input.userBackground,
       );
-      await saveSuggestion(input.applicationId, "cover_letter_tips", tips);
+      await saveSuggestion(
+        input.applicationId,
+        "cover_letter_tips",
+        tips,
+      );
       return tips;
     }),
 
   analyzeJobPosting: protectedProcedure
     .input(z.object({ jobDescription: z.string() }))
-    .mutation(({ input }) => analyzeJobPosting(input.jobDescription)),
+    .mutation(async ({ input, ctx }) => {
+      await checkAiRateLimit(ctx.user.userId);
+      return analyzeJobPosting(input.jobDescription);
+    }),
 
   deleteSuggestion: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      // Verify the suggestion belongs to the user via its application
       const suggestion = await prisma.aiSuggestion.findUnique({
         where: { id: input.id },
         include: { application: { select: { userId: true } } },
@@ -120,7 +155,6 @@ const aiRouter = router({
   getSuggestions: protectedProcedure
     .input(applicationIdInput)
     .query(async ({ input, ctx }) => {
-      // Verify ownership before returning suggestions
       const app = await prisma.application.findUnique({
         where: { id: input.applicationId },
         select: { userId: true },

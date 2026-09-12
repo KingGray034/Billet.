@@ -27,7 +27,7 @@ function getFormData() {
     salary: document.getElementById("salary").value || undefined,
     contactEmail: document.getElementById("contactEmail").value || undefined,
     status: document.getElementById("status").value,
-    jobUrl: document.getElementById("url").value || undefined,
+    jobUrl: document.getElementById("url").value || "",
     jobDescription: document.getElementById("description").value || undefined,
   };
 }

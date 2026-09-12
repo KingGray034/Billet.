@@ -1,7 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/server/db";
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
+  const secret = req.headers.get("x-admin-secret");
+  if (!secret || secret !== process.env.ADMIN_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const demoApps = await prisma.application.findMany({
       where: { isDemo: true },
@@ -35,7 +40,7 @@ export async function DELETE() {
     console.error("Clear demo data failed:", error);
     return NextResponse.json(
       { error: "Failed to clear demo data" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

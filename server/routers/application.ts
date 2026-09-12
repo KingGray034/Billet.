@@ -8,8 +8,11 @@ import { Status } from "@prisma/client";
 
 const StatusValues = Object.values(Status) as [Status, ...Status[]];
 
-const optionalUrl = z.union([z.literal(""), z.string().url()]);
-const optionalEmail = z.union([z.literal(""), z.string().email()]);
+const optionalUrl = z.union([
+  z.literal(""),
+  z.url({ protocol: /^https?$/ }),
+]);
+const optionalEmail = z.union([z.literal(""), z.email()]);
 const applicationId = z.object({ id: z.string() });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -34,3 +34,5 @@ export const publicProcedure = t.procedure;
 
 // Auth required, use for all application/interview/ai data
 export const protectedProcedure = t.procedure.use(isAuthed);
+
+export const createCallerFactory = t.createCallerFactory;

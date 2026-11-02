@@ -7,6 +7,7 @@ const groq = new Groq({
 });
 
 const MODEL = "openai/gpt-oss-120b";
+const REASONING_BUFFER = 2000;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -14,17 +15,27 @@ async function createCompletion(
   messages: Groq.Chat.ChatCompletionMessageParam[],
   options: { temperature: number; max_tokens: number },
 ): Promise<unknown> {
-  const completion = await groq.chat.completions.create({
-    messages,
-    model: MODEL,
-    temperature: options.temperature,
-    max_tokens: options.max_tokens,
-    response_format: { type: "json_object" },
-  });
+  try {
+    const completion = await groq.chat.completions.create({
+      messages,
+      model: MODEL,
+      temperature: options.temperature,
+      max_completion_tokens: options.max_tokens + REASONING_BUFFER,
+      reasoning_effort: "low",
+      response_format: { type: "json_object" },
+    });
 
-  const response = completion.choices[0]?.message?.content;
-  if (!response) throw new Error("No AI response");
-  return JSON.parse(response);
+    const response = completion.choices[0]?.message?.content;
+    if (!response) throw new Error("No AI response");
+    return JSON.parse(response);
+  } catch (error) {
+    console.error(
+      "Groq call failed:",
+      error,
+      error instanceof Error ? error.cause : undefined,
+    );
+    throw error;
+  }
 }
 
 // ─── Functions ────────────────────────────────────────────────────────────────

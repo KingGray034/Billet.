@@ -1,171 +1,176 @@
-import Groq from "groq-sdk";
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import { router, protectedProcedure } from "../trpc";
+import prisma from "../db";
+import { aiRatelimit } from "../ratelimit";
+import {
+  analyzeResumeMatch,
+  generateInterviewQuestions,
+  generateCoverLetterTips,
+  analyzeJobPosting,
+} from "../services/ai";
 
-// ─── Client ───────────────────────────────────────────────────────────────────
+// ─── Reusable Schemas ─────────────────────────────────────────────────────────
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
-
-const MODEL = "openai/gpt-oss-120b";
-const REASONING_BUFFER = 2000;
+const applicationIdInput = z.object({ applicationId: z.string() });
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function createCompletion(
-  messages: Groq.Chat.ChatCompletionMessageParam[],
-  options: { temperature: number; max_tokens: number },
-): Promise<unknown> {
-  try {
-    const completion = await groq.chat.completions.create({
-      messages,
-      model: MODEL,
-      temperature: options.temperature,
-      max_completion_tokens: options.max_tokens + REASONING_BUFFER,
-      reasoning_effort: "low",
-      response_format: { type: "json_object" },
-    });
+async function getApplicationOrThrow(id: string, userId: string) {
+  const application = await prisma.application.findUnique({
+    where: { id },
+    include: { company: true },
+  });
 
-    const response = completion.choices[0]?.message?.content;
-    if (!response) throw new Error("No AI response");
-    return JSON.parse(response);
-  } catch (error) {
-    console.error(
-      "Groq call failed:",
-      error,
-      error instanceof Error ? error.cause : undefined,
-    );
-    throw error;
+  if (!application) {
+    throw new TRPCError({ code: "NOT_FOUND" });
   }
+
+  if (application.userId !== userId) {
+    throw new TRPCError({ code: "FORBIDDEN" });
+  }
+
+  if (!application.jobDescription) {
+    throw new Error("Job description not found");
+  }
+
+  return application;
 }
 
-// ─── Functions ────────────────────────────────────────────────────────────────
-
-async function analyzeResumeMatch(resume: string, jobDescription: string) {
-  const prompt = `You are an expert career coach helping job seekers optimize their applications.
-  
-  RESUME:
-  ${resume}
-
-  JOB DESCRIPTION:
-  ${jobDescription}
-
-  Please analyze this resume against the job description and provide:
-
-  1. **Match Score**: Rate 0-100% how well the resume matches the job requirements
-  2. **Strengths**: What aspects of the resume align well with the job
-  3. **Gaps**: Missing skills, experiences, or keywords from the job description
-  4. **Keyword Suggestions**: Important keywords from the job description
-  5. **Tailoring Tips**: Specific suggestions to improve this resume for this job
-
-  Format your response as JSON with these fields: matchScore, strengths (array), gaps (array), keywords (array), tips (array)`;
-
-  return createCompletion(
-    [
-      {
-        role: "system",
-        content:
-          "You are an expert career coach and ATS specialist. Provide actionable, specific advice.",
-      },
-      { role: "user", content: prompt },
-    ],
-    { temperature: 0.7, max_tokens: 2000 },
-  );
-}
-
-async function generateInterviewQuestions(
-  jobDescription: string,
-  position: string,
+async function saveSuggestion(
+  applicationId: string,
+  type: string,
+  content: unknown,
 ) {
-  const prompt = `You are an expert interviewer preparing interview questions.
-  POSITION: ${position}
-  JOB DESCRIPTION:
-  ${jobDescription}
-  
-  Generate 10 interview questions that are:
-  1. Specific to this role and job description
-  2. A mix of technical, behavioral and situational questions
-  3. Realistic questions that would actually be asked for this position
-  
-  For each question, also provide:
-  - Question type (technical/behavioral/situational)
-  - A brief tip on how to answer it well
-  
-  Format as JSON: questions array with objects containing: question, type, tip`;
-
-  return createCompletion(
-    [
-      {
-        role: "system",
-        content:
-          "You are an experienced technical interviewer and hiring manager.",
-      },
-      { role: "user", content: prompt },
-    ],
-    { temperature: 0.8, max_tokens: 2000 },
-  );
-}
-
-async function generateCoverLetterTips(
-  jobDescription: string,
-  position: string,
-  companyName: string,
-  userBackground?: string,
-) {
-  const prompt = `You are a career coach helping write a compelling cover letter.
-  POSITION: ${position}
-  COMPANY: ${companyName}
-  
-  JOB DESCRIPTION:
-  ${jobDescription}
-  
-  ${userBackground ? `CANDIDATE BACKGROUND:\n${userBackground}` : ""}
-  
-  Provide 5 specific tips for writing an excellent cover letter for this position:
-  1. What company values or mission to highlight
-  2. Which job requirements to emphasize
-  3. Key accomplishments to mention (based on job description)
-  4. How to show enthusiasm for this specific role
-  5. Strong opening and closing sentence suggestions
-  
-  Format as JSON: tips array with objects containing: category, suggestion`;
-
-  return createCompletion(
-    [
-      {
-        role: "system",
-        content:
-          "You are an expert at writing compelling cover letters that get interviews.",
-      },
-      { role: "user", content: prompt },
-    ],
-    { temperature: 0.7, max_tokens: 1500 },
-  );
-}
-
-async function analyzeJobPosting(jobDescription: string) {
-  const prompt = `Analyze this job posting and extract key information: 
-  ${jobDescription}
-  
-  Provide: 
-  1. Required skills (array)
-  2. Preferred/nice-to-have skills (array)
-  3. Years of experience required
-  4. Key responsibilities (array - top 5)
-  5. Company culture indicators (array)
-  6. Red flags if any (array)
-  7. Application tips (array)
-  
-  Format as JSON with these fields.`;
-
-  return createCompletion([{ role: "user", content: prompt }], {
-    temperature: 0.5,
-    max_tokens: 1500,
+  return prisma.aiSuggestion.create({
+    data: {
+      applicationId,
+      type,
+      content: JSON.stringify(content),
+    },
   });
 }
 
-export {
-  analyzeJobPosting,
-  generateInterviewQuestions,
-  generateCoverLetterTips,
-  analyzeResumeMatch,
-};
+// ─── Rate limit helper ────────────────────────────────────────────────────────
+
+async function checkAiRateLimit(userId: string) {
+  const { success, remaining } = await aiRatelimit.limit(userId);
+  if (!success) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: `AI quota reached. You have ${remaining} requests remaining this hour.`,
+    });
+  }
+}
+
+// ─── Router ───────────────────────────────────────────────────────────────────
+
+const aiRouter = router({
+  analyzeResume: protectedProcedure
+    .input(
+      applicationIdInput.extend({
+        resumeText: z.string().min(50, "Resume text is too short"),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await checkAiRateLimit(ctx.user.userId);
+      const application = await getApplicationOrThrow(
+        input.applicationId,
+        ctx.user.userId,
+      );
+      const analysis = await analyzeResumeMatch(
+        input.resumeText,
+        application.jobDescription!,
+      );
+      await saveSuggestion(input.applicationId, "resume_analysis", analysis);
+      return analysis;
+    }),
+
+  generateQuestions: protectedProcedure
+    .input(applicationIdInput)
+    .mutation(async ({ input, ctx }) => {
+      await checkAiRateLimit(ctx.user.userId);
+      const application = await getApplicationOrThrow(
+        input.applicationId,
+        ctx.user.userId,
+      );
+      const questions = await generateInterviewQuestions(
+        application.jobDescription!,
+        application.position,
+      );
+      await saveSuggestion(
+        input.applicationId,
+        "interview_questions",
+        questions,
+      );
+      return questions;
+    }),
+
+  generateCoverLetterTips: protectedProcedure
+    .input(
+      applicationIdInput.extend({
+        userBackground: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      await checkAiRateLimit(ctx.user.userId);
+      const application = await getApplicationOrThrow(
+        input.applicationId,
+        ctx.user.userId,
+      );
+      const tips = await generateCoverLetterTips(
+        application.jobDescription!,
+        application.position,
+        application.company.name,
+        input.userBackground,
+      );
+      await saveSuggestion(
+        input.applicationId,
+        "cover_letter_tips",
+        tips,
+      );
+      return tips;
+    }),
+
+  analyzeJobPosting: protectedProcedure
+    .input(z.object({ jobDescription: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      await checkAiRateLimit(ctx.user.userId);
+      return analyzeJobPosting(input.jobDescription);
+    }),
+
+  deleteSuggestion: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const suggestion = await prisma.aiSuggestion.findUnique({
+        where: { id: input.id },
+        include: { application: { select: { userId: true } } },
+      });
+      if (!suggestion || suggestion.application.userId !== ctx.user.userId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      return prisma.aiSuggestion.delete({ where: { id: input.id } });
+    }),
+
+  getSuggestions: protectedProcedure
+    .input(applicationIdInput)
+    .query(async ({ input, ctx }) => {
+      const app = await prisma.application.findUnique({
+        where: { id: input.applicationId },
+        select: { userId: true },
+      });
+      if (!app || app.userId !== ctx.user.userId) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const suggestions = await prisma.aiSuggestion.findMany({
+        where: { applicationId: input.applicationId },
+        orderBy: { createdAt: "desc" },
+      });
+      return suggestions.map((s) => ({
+        ...s,
+        content: JSON.parse(s.content),
+      }));
+    }),
+});
+
+export { aiRouter };

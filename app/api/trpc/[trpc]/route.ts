@@ -21,6 +21,11 @@ const handler = async (req: NextRequest) => {
     req,
     router: appRouter,
     createContext: () => ({}),
+    onError: ({ path, error }) => {
+      if (error.code === "INTERNAL_SERVER_ERROR") {
+        console.error(`tRPC failed on ${path}:`, error.message, error.cause);
+      }
+    },
   });
 
   const headers = new Headers(response.headers);

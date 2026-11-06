@@ -6,6 +6,7 @@ import { Analytics } from "@/components/Analytics";
 import { SearchBar } from "@/components/SearchBar";
 import { StatsFooter } from "@/components/StatsFooter";
 import { GmailImportModal } from "@/components/GmailImportModal";
+import { ResumeManager } from "@/components/ResumeManager";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -115,19 +116,25 @@ function HomeContent() {
 
           {/* ── Greeting + Search ─────────────────────────────── */}
           {view !== "analytics" ? (
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <p className="font-serif text-lg text-retro-border/40 tracking-wide whitespace-nowrap">
                 {greeting}
               </p>
-              {/* Constrain search width so greeting has room */}
-              <div className="flex-1 max-w-sm ml-auto">
-                <SearchBar onSearch={setActiveSearch} />
+              <div className="flex items-start gap-3 w-full sm:w-auto sm:flex-1 sm:justify-end ml-auto">
+                <ResumeManager />
+                {/* Constrain search width so greeting has room */}
+                <div className="flex-1 sm:max-w-sm">
+                  <SearchBar onSearch={setActiveSearch} />
+                </div>
               </div>
             </div>
           ) : (
-            <p className="font-serif text-lg text-retro-border/40 tracking-wide text-center">
-              {greeting}
-            </p>
+            <div className="flex items-center justify-center gap-6">
+              <p className="font-serif text-lg text-retro-border/40 tracking-wide">
+                {greeting}
+              </p>
+              <ResumeManager />
+            </div>
           )}
 
         </header>

@@ -75,6 +75,7 @@ function ApplicationDetailPage() {
   const returnView = searchParams.get("returnView") ?? "kanban";
 
   const [resumeText, setResumeText] = useState("");
+  const [selectedResumeId, setSelectedResumeId] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<EditForm>(DEFAULT_EDIT_FORM);
 
@@ -84,9 +85,12 @@ function ApplicationDetailPage() {
     id: applicationId,
   });
 
+  const { data: savedResumes = [] } = trpc.resume.list.useQuery();
+
   const analyzeResume = trpc.ai.analyzeResume.useMutation({
     onSuccess: () => {
       setResumeText("");
+      setSelectedResumeId("");
       utils.application.getById.invalidate({ id: applicationId });
     },
   });
@@ -133,8 +137,15 @@ function ApplicationDetailPage() {
     setEditForm((prev) => ({ ...prev, [field]: value }));
 
   const handleAnalyzeResume = async () => {
+    if (selectedResumeId) {
+      await analyzeResume.mutateAsync({
+        applicationId,
+        resumeId: selectedResumeId,
+      });
+      return;
+    }
     if (!resumeText.trim()) {
-      alert("Please paste your resume text");
+      alert("Please choose a saved resume or paste your resume text");
       return;
     }
     await analyzeResume.mutateAsync({ applicationId, resumeText });
@@ -364,16 +375,43 @@ function ApplicationDetailPage() {
             {!parsedAnalysis ? (
               <>
                 <p className="text-retro-border/70 mb-6 text-center">
-                  Paste your resume text below and get personalized suggestions
-                  to tailor it for this job.
+                  Choose a saved resume or paste the text below and get
+                  personalized suggestions to tailor it for this job.
                 </p>
-                <textarea
-                  value={resumeText}
-                  onChange={(e) => setResumeText(e.target.value)}
-                  placeholder="Paste your resume text here..."
-                  rows={8}
-                  className="w-full border-4 border-retro-border p-4 mb-6 focus:ring-0 focus:border-primary outline-none"
-                />
+                {savedResumes.length > 0 ? (
+                  <div className={selectedResumeId ? "mb-6" : "mb-4"}>
+                    <label className="block text-xs font-bold tracking-[0.2em] uppercase text-retro-border/60 mb-2">
+                      Resume
+                    </label>
+                    <select
+                      value={selectedResumeId}
+                      onChange={(e) => setSelectedResumeId(e.target.value)}
+                      className="w-full px-4 py-2 border-4 border-retro-border bg-white outline-none focus:border-primary"
+                    >
+                      <option value="">Paste text instead</option>
+                      {savedResumes.map((resume) => (
+                        <option key={resume.id} value={resume.id}>
+                          {resume.label}
+                          {resume.fileName ? ` (${resume.fileName})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <p className="text-xs text-retro-border/60 mb-4 text-center">
+                    Tip: save your resumes with the Resumes button on the
+                    dashboard to pick them here.
+                  </p>
+                )}
+                {!selectedResumeId && (
+                  <textarea
+                    value={resumeText}
+                    onChange={(e) => setResumeText(e.target.value)}
+                    placeholder="Paste your resume text here..."
+                    rows={8}
+                    className="w-full border-4 border-retro-border p-4 mb-6 focus:ring-0 focus:border-primary outline-none"
+                  />
+                )}
                 <div className="flex justify-center">
                   <button
                     onClick={handleAnalyzeResume}

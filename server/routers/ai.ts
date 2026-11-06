@@ -14,6 +14,15 @@ import {
 
 const applicationIdInput = z.object({ applicationId: z.string() });
 
+const analyzeResumeInput = applicationIdInput
+  .extend({
+    resumeId: z.string().optional(),
+    resumeText: z.string().min(50, "Resume text is too short").optional(),
+  })
+  .refine((value) => (value.resumeId ?? value.resumeText) !== undefined, {
+    message: "Choose a saved resume or paste your resume text",
+  });
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function getApplicationOrThrow(id: string, userId: string) {
@@ -35,6 +44,24 @@ async function getApplicationOrThrow(id: string, userId: string) {
   }
 
   return application;
+}
+
+async function resolveResumeText(
+  userId: string,
+  resumeId?: string,
+  resumeText?: string,
+) {
+  if (resumeId) {
+    const resume = await prisma.resume.findFirst({
+      where: { id: resumeId, userId },
+      select: { content: true },
+    });
+    if (!resume) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Resume not found" });
+    }
+    return resume.content;
+  }
+  return resumeText ?? "";
 }
 
 async function saveSuggestion(
@@ -67,19 +94,20 @@ async function checkAiRateLimit(userId: string) {
 
 const aiRouter = router({
   analyzeResume: protectedProcedure
-    .input(
-      applicationIdInput.extend({
-        resumeText: z.string().min(50, "Resume text is too short"),
-      }),
-    )
+    .input(analyzeResumeInput)
     .mutation(async ({ input, ctx }) => {
       await checkAiRateLimit(ctx.user.userId);
       const application = await getApplicationOrThrow(
         input.applicationId,
         ctx.user.userId,
       );
-      const analysis = await analyzeResumeMatch(
+      const resumeText = await resolveResumeText(
+        ctx.user.userId,
+        input.resumeId,
         input.resumeText,
+      );
+      const analysis = await analyzeResumeMatch(
+        resumeText,
         application.jobDescription!,
       );
       await saveSuggestion(input.applicationId, "resume_analysis", analysis);
